@@ -207,4 +207,126 @@
         { jefe: { nombre: "Petra Fonseca", edad: 55, sexo: "Mujer" }, integrantes: [
           { nombre: "Roman Fonseca", edad: 28, sexo: "Hombre" }
         ]},
-        { jefe: { nombre: "Rafaela Fonseca", edad: 32, sexo: "Mujer" }, integrantes:
+        { jefe: { nombre: "Rafaela Fonseca", edad: 32, sexo: "Mujer" }, integrantes: [
+          { nombre: "Josefina Gonsalez", edad: 10, sexo: "Mujer" },
+          { nombre: "Fransisca Gonzalez", edad: 7, sexo: "Mujer" },
+          { nombre: "Conzuelo Gonzalez", edad: 2, sexo: "Mujer" },
+          { nombre: "Marcos Gonzalez", edad: 1, sexo: "Hombre" }
+        ]},
+        { jefe: { nombre: "Trinidad Fonseca", edad: 30, sexo: "Hombre" }, integrantes: [
+          { nombre: "Rosa Fonseca", edad: 20, sexo: "Mujer" }
+        ]},
+        { jefe: { nombre: "Jasinta Hernandez", edad: 48, sexo: "Mujer" }, integrantes: [
+          { nombre: "Carlos Fonseca", edad: 15, sexo: "Hombre" },
+          { nombre: "Refugio Fonseca", edad: 13, sexo: "Hombre" },
+          { nombre: "Fransisca Fonseca", edad: 11, sexo: "Mujer" },
+          { nombre: "Guadalupe Fonseca", edad: 10, sexo: "Mujer" }
+        ]},
+        { jefe: { nombre: "Ygnacio Fonseca", edad: 23, sexo: "Hombre" }, integrantes: [
+          { nombre: "Jesús Fonseca", edad: 21, sexo: "Mujer" }
+        ]},
+        { jefe: { nombre: "Aurelia Hernández", edad: 48, sexo: "Mujer" }, integrantes: [
+          { nombre: "Guadalupe Fonseca", edad: 31, sexo: "Mujer" },
+          { nombre: "Ygnasia Fonseca", edad: 25, sexo: "Mujer" },
+          { nombre: "Librada Fonseca", edad: 18, sexo: "Mujer" },
+          { nombre: "Cresensia Fonseca", edad: 16, sexo: "Mujer" },
+          { nombre: "Trenidad Fonseca", edad: 13, sexo: "Hombre" },
+          { nombre: "Fransisco Fonseca", edad: 11, sexo: "Hombre" },
+          { nombre: "Pedro Fonseca", edad: 8, sexo: "Hombre" }
+        ]},
+        { jefe: { nombre: "Jesus Fonseca", edad: 29, sexo: "Mujer" }, integrantes: [
+          { nombre: "Consepción", edad: 2, sexo: "Mujer" }
+        ]},
+        { jefe: { nombre: "Guadalupe Alvarez", edad: 50, sexo: "Mujer" }, integrantes: [
+          { nombre: "Fransisco Fonseca", edad: 18, sexo: "Hombre" },
+          { nombre: "Jesus Hernández", edad: 11, sexo: "Hombre" },
+          { nombre: "Jesus Fonseca", edad: 52, sexo: "Hombre" },
+          { nombre: "Guadalupe Orozco", edad: 20, sexo: "Mujer" },
+          { nombre: "Pedro Hernandez", edad: 26, sexo: "Hombre" },
+          { nombre: "Refugio Fonseca", edad: 22, sexo: "Mujer" }
+        ]},
+        { jefe: { nombre: "Severa Agirre", edad: 80, sexo: "Mujer" }, integrantes: [
+          { nombre: "Norberto Huerta", edad: 60, sexo: "Hombre" },
+          { nombre: "Guadalupe Fonseca", edad: 29, sexo: "Hombre" },
+          { nombre: "Juana Camarena", edad: 20, sexo: "Mujer" }
+        ]}
+      ];
+
+      // Renderizar la lista lateral de familias
+      window.renderizarLista = function(familias) {
+        var contenedor = document.getElementById('listaCenso');
+        contenedor.innerHTML = '';
+
+        familias.forEach(function(fam) {
+          var esHombre = fam.jefe.sexo === "Hombre";
+          var icono = esHombre ? "👨" : "👩";
+          var claseHead = esHombre ? "hombre" : "mujer";
+
+          var htmlFam = `
+            <div class="family-group">
+              <div class="family-head ${claseHead}">
+                ${icono} ${fam.jefe.nombre} (${fam.jefe.edad} años)
+              </div>
+          `;
+
+          fam.integrantes.forEach(function(m) {
+            htmlFam += `<div class="member-item">&bull; ${m.nombre} (${m.edad} años, ${m.sexo})</div>`;
+          });
+
+          htmlFam += `</div>`;
+          contenedor.innerHTML += htmlFam;
+        });
+      };
+
+      // Buscador de habitantes
+      window.filtrarHabitantes = function() {
+        var texto = document.getElementById('inputBuscador').value.toLowerCase();
+        
+        if (!texto) {
+          renderizarLista(familiasLasJuntas);
+          return;
+        }
+
+        var familiasFiltradas = familiasLasJuntas.filter(function(fam) {
+          var coincideJefe = fam.jefe.nombre.toLowerCase().includes(texto);
+          var coincideIntegrante = fam.integrantes.some(function(m) {
+            return m.nombre.toLowerCase().includes(texto);
+          });
+          return coincideJefe || coincideIntegrante;
+        });
+
+        renderizarLista(familiasFiltradas);
+      };
+
+      // Cargar lista inicial
+      renderizarLista(familiasLasJuntas);
+
+      // Agregar marcador en el mapa
+      var marker = L.marker(coordsLasJuntas).addTo(map);
+      
+      var popupContent = `
+        <div class="popup-censo">
+          <h3>Rancho Las Juntas</h3>
+          <p><b>Nombre actual:</b> Unión de Guadalupe</p>
+          <p><b>Población total:</b> 153 personas</p>
+          <p><b>Total de familias:</b> 31</p>
+          <hr>
+          <small>Utiliza el panel lateral para consultar el padrón de habitantes.</small>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent).openPopup();
+      
+      marker.bindTooltip("Las Juntas (Unión de Guadalupe)", {
+        permanent: true,
+        direction: 'top',
+        className: 'etiqueta-comunidad',
+        offset: [0, -10]
+      });
+
+      // Recalcular tamaño del mapa
+      setTimeout(function(){ map.invalidateSize(); }, 300);
+    }
+  </script>
+</body>
+</html>
