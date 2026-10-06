@@ -163,19 +163,27 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
+   // =========================================================
+    // 🔒 PROTECCIÓN CON CONTRASEÑA (CON REFRESH AUTOMÁTICO DE PANTALLA)
     // =========================================================
-    // 🔒 PROTECCIÓN CON CONTRASEÑA
-    // =========================================================
-    var claveAcceso = "Atotonilco1930"; // Puedes cambiar la contraseña aquí
-    var intento = prompt("Ingrese la contraseña de acceso al prototipo del Censo 1930:");
+    window.addEventListener('DOMContentLoaded', function() {
+      var claveAcceso = "Atotonilco1930";
+      var intento = prompt("Ingrese la contraseña de acceso al prototipo del Censo 1930:");
 
-    if (intento !== claveAcceso) {
-      alert("Contraseña incorrecta. Acceso denegado.");
-      document.body.innerHTML = "<div style='text-align:center; padding:100px; font-family:sans-serif;'><h1>Acceso Restringido</h1><p>No tienes permiso para consultar este prototipo.</p></div>";
-      window.stop();
-    }
+      if (intento !== claveAcceso) {
+        alert("Contraseña incorrecta. Acceso denegado.");
+        document.body.innerHTML = "<div style='text-align:center; padding:100px; font-family:sans-serif;'><h1>Acceso Restringido</h1><p>No tienes permiso para consultar este prototipo.</p></div>";
+        window.stop();
+      } else {
+        // Fuerza al mapa a dibujarse al ingresar la clave correcta
+        setTimeout(function(){ 
+          if (typeof map !== 'undefined') {
+            map.invalidateSize(); 
+          }
+        }, 300);
+      }
+    });
     // =========================================================
-
     // Coordenadas específicas para Las Juntas
     var coordsLasJuntas = [20.64055, -102.5097];
 
