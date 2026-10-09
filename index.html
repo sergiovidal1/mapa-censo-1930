@@ -3,378 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Censo 1930 - San Francisco de Asís, Atotonilco</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+  <title>Censo 1930 - Selector de Comunidades</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; display: flex; flex-direction: column; }
-    header { background-color: #8b0000; color: white; padding: 15px 20px; text-align: center; }
-    header h2 { font-size: 20px; margin-bottom: 2px; }
-    header p { font-size: 13px; opacity: 0.85; }
-
-    #main-container { display: flex; flex: 1; height: calc(100vh - 70px); overflow: hidden; }
-    #sidebar { width: 360px; background-color: #f8f9fa; border-right: 1px solid #dee2e6; display: flex; flex-direction: column; }
-    
-    /* Tarjeta de Estadísticas en Rojo */
-    .summary-card { background-color: #8b0000; color: white; padding: 14px 15px; text-align: center; }
-    .summary-stats { display: flex; justify-content: space-around; align-items: center; }
-    .stat-box { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; }
-    .stat-number { font-size: 20px; font-weight: bold; color: #ffffff; display: block; margin-bottom: 2px; }
-
-    /* Buscador */
-    .search-container { padding: 12px 15px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0; }
-    .search-container input {
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
       width: 100%;
-      padding: 9px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-      outline: none;
-      background-color: #ffffff;
-      transition: all 0.2s ease;
+      background-color: #8b0000;
+      color: white;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
-    .search-container input:focus {
-      border-color: #8b0000;
-      box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.15);
-    }
+    header h1 { margin: 0 0 8px 0; font-size: 1.8em; }
+    header p { margin: 0; opacity: 0.9; font-size: 0.95em; }
 
-    /* Lista de familias */
-    .census-list { flex: 1; overflow-y: auto; padding: 12px; }
-    .family-card {
-      background: #ffffff;
-      border-radius: 6px;
+    .container {
+      max-width: 800px;
+      width: 90%;
+      margin: 30px auto;
+      text-align: center;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 25px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
       border: 1px solid #e2e8f0;
-      border-left: 4px solid #8b0000;
-      padding: 12px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .family-card.highlight {
-      background-color: #fff5f5;
-      border-color: #e53e3e;
-      box-shadow: 0 3px 8px rgba(139, 0, 0, 0.2);
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 15px rgba(139, 0, 0, 0.15);
     }
-    .family-head { font-weight: bold; color: #1a4971; font-size: 14px; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
-    .member-item { font-size: 13px; color: #475569; padding: 2px 0 2px 8px; }
-
-    #mapa { flex: 1; height: 100%; }
-    .etiqueta-comunidad { font-weight: bold; background: #8b0000; color: white; padding: 4px 8px; border-radius: 4px; border: none; }
+    .card h3 {
+      margin: 0 0 10px 0;
+      color: #8b0000;
+      font-size: 1.3em;
+    }
+    .card p {
+      color: #666;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+    .stats {
+      font-size: 0.85em;
+      font-weight: bold;
+      color: #444;
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      background-color: #8b0000;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.9em;
+      transition: background-color 0.2s;
+    }
+    .btn:hover {
+      background-color: #700000;
+    }
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      font-size: 0.8em;
+      color: #777;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+      width: 100%;
+      background: white;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h2>Las Juntas</h2>
-    <p>Rancho Unión de Guadalupe &bull; Censo 1930</p>
+    <h1>Reconstrucción Cartográfica y Censal (1930)</h1>
+    <p>Proyecto de Investigación Histórica Interactiva</p>
   </header>
 
-  <div id="main-container">
-    <div id="sidebar">
-      <!-- Estadísticas -->
-      <div class="summary-card">
-        <div class="summary-stats">
-          <div class="stat-box"><span class="stat-number">153</span>Habitantes</div>
-          <div class="stat-box"><span class="stat-number">31</span>Familias</div>
+  <div class="container">
+    <h2>Seleccione una Comunidad</h2>
+    <p>Explore el padrón censal y la ubicación geográfica de los habitantes según el Censo de 1930.</p>
+
+    <div class="cards-grid">
+      <!-- Tarjeta Montecillos -->
+      <div class="card">
+        <div>
+          <h3>Montecillos</h3>
+          <p>Comunidad de Montecillos</p>
+          <div class="stats">📍 11 Habitantes &bull; 2 Familias</div>
         </div>
+        <a href="montecillos.html" class="btn">Ver Mapa y Padrón</a>
       </div>
 
-      <!-- Buscador -->
-      <div class="search-container">
-        <input type="text" id="inputBuscador" placeholder="Buscar habitante...">
+      <!-- Tarjeta Las Juntas -->
+      <div class="card">
+        <div>
+          <h3>Las Juntas</h3>
+          <p>Rancho Unión de Guadalupe</p>
+          <div class="stats">📍 153 Habitantes &bull; 31 Familias</div>
+        </div>
+        <a href="las-juntas.html" class="btn">Ver Mapa y Padrón</a>
       </div>
-
-      <!-- Lista de familias -->
-      <div class="census-list" id="listaCenso"></div>
     </div>
-
-    <!-- Mapa -->
-    <div id="mapa"></div>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <footer>
+    © 2026 Sergio Vidal — Proyecto de Investigación Censo 1930.<br>
+    Todos los derechos reservados. Registrado bajo Licencia Creative Commons (CC BY-NC-ND 4.0).
+  </footer>
 
-  <script>
-    // 1. Verificación de Contraseña
-    var claveAcceso = "Atotonilco1930";
-    var intento = prompt("Ingrese la contraseña para ver el prototipo del Censo 1930:");
-
-    if (intento !== claveAcceso) {
-      alert("Contraseña incorrecta. Acceso denegado.");
-      document.body.innerHTML = "<div style='text-align:center; padding:100px; font-family:sans-serif;'><h1>Acceso Restringido</h1><p>No tienes permiso para consultar este prototipo.</p></div>";
-    } else {
-      iniciarMapa();
-    }
-
-    function iniciarMapa() {
-      var coordsLasJuntas = [20.64055, -102.5097];
-      var map = L.map('mapa').setView(coordsLasJuntas, 15);
-
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Censo 1930',
-        maxZoom: 18
-      }).addTo(map);
-
-      // Padrón de familias
-      var familiasLasJuntas = [
-        { jefe: { nombre: "Pablo Fonseca", edad: 48, sexo: "Hombre" }, integrantes: [
-          { nombre: "Carmen Vazquez", edad: 47, sexo: "Mujer" },
-          { nombre: "Elvira Fonseca", edad: 19, sexo: "Mujer" },
-          { nombre: "Anatalia Fonseca", edad: 16, sexo: "Mujer" },
-          { nombre: "Fransisca Fonseca", edad: 12, sexo: "Mujer" },
-          { nombre: "Fransisco Fonseca", edad: 10, sexo: "Hombre" },
-          { nombre: "Antonio Fonseca", edad: 8, sexo: "Hombre" },
-          { nombre: "José Fonseca", edad: 4, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Margarito Fonseca", edad: 32, sexo: "Hombre" }, integrantes: [
-          { nombre: "Josefina De la Torre", edad: 28, sexo: "Mujer" },
-          { nombre: "José Fonseca", edad: 7, sexo: "Hombre" },
-          { nombre: "Antonio Fonseca", edad: 6, sexo: "Hombre" },
-          { nombre: "Salvador Fonseca", edad: 4, sexo: "Hombre" },
-          { nombre: "Antonio Fonseca", edad: 3, sexo: "Hombre" },
-          { nombre: "Carmen Fonseca", edad: 0, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Masedonio Huerta", edad: 55, sexo: "Hombre" }, integrantes: [
-          { nombre: "Adelaida Gonzalez", edad: 43, sexo: "Mujer" },
-          { nombre: "Guadalupe Huerta", edad: 19, sexo: "Hombre" },
-          { nombre: "Petra Huerta", edad: 17, sexo: "Mujer" },
-          { nombre: "Fransisca Huerta", edad: 8, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Luis Huerta", edad: 26, sexo: "Hombre" }, integrantes: [
-          { nombre: "Paula Flores", edad: 21, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Santos Hernández", edad: 65, sexo: "Mujer" }, integrantes: [] },
-        { jefe: { nombre: "Marselino Fonseca", edad: 30, sexo: "Hombre" }, integrantes: [
-          { nombre: "Rosa Gonsales", edad: 26, sexo: "Mujer" },
-          { nombre: "Soledad Fonseca", edad: 6, sexo: "Mujer" },
-          { nombre: "Librada Fonseca", edad: 3, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Mateo Vasquez", edad: 42, sexo: "Hombre" }, integrantes: [
-          { nombre: "Manuela Fonseca", edad: 39, sexo: "Mujer" },
-          { nombre: "Juana Vasquez", edad: 19, sexo: "Mujer" },
-          { nombre: "Refugio Vasquez", edad: 18, sexo: "Mujer" },
-          { nombre: "Pedro Vasquez", edad: 16, sexo: "Hombre" },
-          { nombre: "Jesus Vasquez", edad: 14, sexo: "Hombre" },
-          { nombre: "Fransisco Vasquez", edad: 10, sexo: "Hombre" },
-          { nombre: "Maria Vasquez", edad: 6, sexo: "Mujer" },
-          { nombre: "Librada Vasquez", edad: 4, sexo: "Mujer" },
-          { nombre: "Guadalupe Vasquez", edad: 1, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Natibidad Angulo", edad: 39, sexo: "Hombre" }, integrantes: [
-          { nombre: "Felisiana Gonzalez", edad: 34, sexo: "Mujer" },
-          { nombre: "Pedro Angulo", edad: 15, sexo: "Hombre" },
-          { nombre: "Guadalupe Angulo", edad: 12, sexo: "Mujer" },
-          { nombre: "Jesús Angulo", edad: 10, sexo: "Hombre" },
-          { nombre: "Carmen Angulo", edad: 8, sexo: "Mujer" },
-          { nombre: "José Angulo", edad: 1, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Agustina Fonseca", edad: 68, sexo: "Mujer" }, integrantes: [] },
-        { jefe: { nombre: "Manuel Fonseca", edad: 34, sexo: "Hombre" }, integrantes: [
-          { nombre: "Jesus Fonseca", edad: 30, sexo: "Mujer" },
-          { nombre: "Juana Fonseca", edad: 10, sexo: "Mujer" },
-          { nombre: "Ygnacio Fonseca", edad: 1, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Santos Fonseca", edad: 30, sexo: "Hombre" }, integrantes: [
-          { nombre: "Jesus Angulo", edad: 23, sexo: "Mujer" },
-          { nombre: "Trinidad Fonseca", edad: 4, sexo: "Mujer" },
-          { nombre: "Ysabel Fonseca", edad: 0, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Juan Alvarez", edad: 43, sexo: "Hombre" }, integrantes: [
-          { nombre: "Jesus Fonseca", edad: 37, sexo: "Mujer" },
-          { nombre: "Salvador Alvarez", edad: 11, sexo: "Hombre" },
-          { nombre: "Pedro Alvarez", edad: 10, sexo: "Hombre" },
-          { nombre: "Juan Alvarez", edad: 8, sexo: "Hombre" },
-          { nombre: "Francisca Alvarez", edad: 6, sexo: "Mujer" },
-          { nombre: "Jose Alvarez", edad: 4, sexo: "Hombre" },
-          { nombre: "Pascual Alvarez", edad: 1, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Ygnacia Fonseca", edad: 48, sexo: "Mujer" }, integrantes: [
-          { nombre: "Virgina Fonseca", edad: 34, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Benito Angulo", edad: 74, sexo: "Hombre" }, integrantes: [
-          { nombre: "Fermina Fonseca", edad: 55, sexo: "Mujer" },
-          { nombre: "Jose Angulo", edad: 32, sexo: "Hombre" },
-          { nombre: "Gavino Angulo", edad: 23, sexo: "Hombre" },
-          { nombre: "Dolorez Angulo", edad: 19, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Jose Fonseca", edad: 53, sexo: "Hombre" }, integrantes: [
-          { nombre: "Antonio Fonseca", edad: 21, sexo: "Hombre" },
-          { nombre: "Juan Fonseca", edad: 18, sexo: "Hombre" },
-          { nombre: "Francisco Fonseca", edad: 5, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Refugio Fonseca", edad: 47, sexo: "Mujer" }, integrantes: [
-          { nombre: "Julia Vasquez", edad: 25, sexo: "Mujer" },
-          { nombre: "Enedina Vasquez", edad: 23, sexo: "Mujer" },
-          { nombre: "Jose Maria Vasquez", edad: 20, sexo: "Hombre" },
-          { nombre: "Soledad Vasquez", edad: 18, sexo: "Mujer" },
-          { nombre: "Julio Vasquez", edad: 16, sexo: "Hombre" },
-          { nombre: "Marselino Vasquez", edad: 13, sexo: "Hombre" },
-          { nombre: "Ysabel Vasquez", edad: 11, sexo: "Hombre" },
-          { nombre: "Jose Vasquez", edad: 8, sexo: "Hombre" },
-          { nombre: "Francisca Vasquez", edad: 6, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Ramon Hernandez", edad: 43, sexo: "Hombre" }, integrantes: [
-          { nombre: "Guadalupe Angulo", edad: 40, sexo: "Mujer" },
-          { nombre: "Ygnasia Hernandez", edad: 20, sexo: "Mujer" },
-          { nombre: "Elvira Hernandez", edad: 18, sexo: "Mujer" },
-          { nombre: "Trenidad Hernandez", edad: 16, sexo: "Hombre" },
-          { nombre: "Maria Hernandez", edad: 14, sexo: "Mujer" },
-          { nombre: "Guadalupe Hernandez", edad: 12, sexo: "Mujer" },
-          { nombre: "Ramon Hernandez", edad: 11, sexo: "Hombre" },
-          { nombre: "Mersedes Hernandez", edad: 9, sexo: "Mujer" },
-          { nombre: "Jose Hernandez", edad: 0, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Trenidad Fonseca", edad: 37, sexo: "Hombre" }, integrantes: [
-          { nombre: "Claudia Angulo", edad: 32, sexo: "Mujer" },
-          { nombre: "Antonio Fonseca", edad: 15, sexo: "Hombre" },
-          { nombre: "Jose Fonseca", edad: 10, sexo: "Hombre" },
-          { nombre: "Elvira Fonseca", edad: 6, sexo: "Mujer" },
-          { nombre: "Carmen Fonseca", edad: 3, sexo: "Mujer" },
-          { nombre: "Martin Fonseca", edad: 0, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Jesus Riso", edad: 43, sexo: "Mujer" }, integrantes: [
-          { nombre: "Julio Nunez", edad: 23, sexo: "Hombre" },
-          { nombre: "Margarita Nunez", edad: 20, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Martin Hernandez", edad: 30, sexo: "Hombre" }, integrantes: [
-          { nombre: "Iginia Fonseca", edad: 25, sexo: "Mujer" },
-          { nombre: "Fransisco Hernandez", edad: 7, sexo: "Hombre" },
-          { nombre: "Guadalupe Hernandez", edad: 5, sexo: "Mujer" },
-          { nombre: "Socorro Hernandez", edad: 2, sexo: "Mujer" },
-          { nombre: "Rafael Hernandez", edad: 0, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Lorenza De la Torre", edad: 52, sexo: "Mujer" }, integrantes: [
-          { nombre: "Secundino Fonseca", edad: 24, sexo: "Hombre" },
-          { nombre: "Luiz Fonseca", edad: 20, sexo: "Hombre" },
-          { nombre: "José Fonseca", edad: 14, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Refugio Fonseca", edad: 27, sexo: "Mujer" }, integrantes: [
-          { nombre: "Rafaela Fonseca", edad: 11, sexo: "Mujer" },
-          { nombre: "Socorro Fonseca", edad: 8, sexo: "Mujer" },
-          { nombre: "Salvador Fonseca", edad: 7, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Petra Fonseca", edad: 55, sexo: "Mujer" }, integrantes: [
-          { nombre: "Roman Fonseca", edad: 28, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Rafaela Fonseca", edad: 32, sexo: "Mujer" }, integrantes: [
-          { nombre: "Josefina Gonsalez", edad: 10, sexo: "Mujer" },
-          { nombre: "Fransisca Gonzalez", edad: 7, sexo: "Mujer" },
-          { nombre: "Conzuelo Gonzalez", edad: 2, sexo: "Mujer" },
-          { nombre: "Marcos Gonzalez", edad: 1, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Trinidad Fonseca", edad: 30, sexo: "Hombre" }, integrantes: [
-          { nombre: "Rosa Fonseca", edad: 20, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Jasinta Hernandez", edad: 48, sexo: "Mujer" }, integrantes: [
-          { nombre: "Carlos Fonseca", edad: 15, sexo: "Hombre" },
-          { nombre: "Refugio Fonseca", edad: 13, sexo: "Hombre" },
-          { nombre: "Fransisca Fonseca", edad: 11, sexo: "Mujer" },
-          { nombre: "Guadalupe Fonseca", edad: 10, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Ygnacio Fonseca", edad: 23, sexo: "Hombre" }, integrantes: [
-          { nombre: "Jesús Fonseca", edad: 21, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Aurelia Hernández", edad: 48, sexo: "Mujer" }, integrantes: [
-          { nombre: "Guadalupe Fonseca", edad: 31, sexo: "Mujer" },
-          { nombre: "Ygnasia Fonseca", edad: 25, sexo: "Mujer" },
-          { nombre: "Librada Fonseca", edad: 18, sexo: "Mujer" },
-          { nombre: "Cresensia Fonseca", edad: 16, sexo: "Mujer" },
-          { nombre: "Trenidad Fonseca", edad: 13, sexo: "Hombre" },
-          { nombre: "Fransisco Fonseca", edad: 11, sexo: "Hombre" },
-          { nombre: "Pedro Fonseca", edad: 8, sexo: "Hombre" }
-        ]},
-        { jefe: { nombre: "Jesus Fonseca", edad: 29, sexo: "Mujer" }, integrantes: [
-          { nombre: "Consepción", edad: 2, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Guadalupe Alvarez", edad: 50, sexo: "Mujer" }, integrantes: [
-          { nombre: "Fransisco Fonseca", edad: 18, sexo: "Hombre" },
-          { nombre: "Jesus Hernández", edad: 11, sexo: "Hombre" },
-          { nombre: "Jesus Fonseca", edad: 52, sexo: "Hombre" },
-          { nombre: "Guadalupe Orozco", edad: 20, sexo: "Mujer" },
-          { nombre: "Pedro Hernandez", edad: 26, sexo: "Hombre" },
-          { nombre: "Refugio Fonseca", edad: 22, sexo: "Mujer" }
-        ]},
-        { jefe: { nombre: "Severa Agirre", edad: 80, sexo: "Mujer" }, integrantes: [
-          { nombre: "Norberto Huerta", edad: 60, sexo: "Hombre" },
-          { nombre: "Guadalupe Fonseca", edad: 29, sexo: "Hombre" },
-          { nombre: "Juana Camarena", edad: 20, sexo: "Mujer" }
-        ]}
-      ];
-
-      // Renderizar familias
-      var contenedor = document.getElementById('listaCenso');
-      contenedor.innerHTML = '';
-
-      familiasLasJuntas.forEach(function(fam) {
-        var htmlFam = `
-          <div class="family-card">
-            <div class="family-head">
-              👴 ${fam.jefe.nombre} (${fam.jefe.edad} años)
-            </div>
-        `;
-
-        fam.integrantes.forEach(function(m) {
-          htmlFam += `<div class="member-item">&bull; ${m.nombre} (${m.edad} años, ${m.sexo})</div>`;
-        });
-
-        htmlFam += `</div>`;
-        contenedor.innerHTML += htmlFam;
-      });
-
-      // Lógica interactiva del buscador
-      var inputBuscador = document.getElementById('inputBuscador');
-      inputBuscador.addEventListener('input', function(e) {
-        var query = e.target.value.toLowerCase().trim();
-        var tarjetas = document.querySelectorAll('.family-card');
-        var primeraCoincidencia = null;
-
-        tarjetas.forEach(function(card) {
-          var texto = card.textContent.toLowerCase();
-
-          if (texto.includes(query)) {
-            card.style.display = 'block';
-            card.classList.remove('highlight');
-            if (!primeraCoincidencia && query !== '') {
-              primeraCoincidencia = card;
-            }
-          } else {
-            card.style.display = 'none';
-          }
-        });
-
-        if (primeraCoincidencia) {
-          primeraCoincidencia.classList.add('highlight');
-          primeraCoincidencia.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      });
-
-      // Marcador del mapa
-      var marker = L.marker(coordsLasJuntas).addTo(map);
-      
-      var popupContent = `
-        <div style="text-align:center;">
-          <h3 style="color:#8b0000; margin-bottom:5px;">Rancho Las Juntas</h3>
-          <p><b>Nombre actual:</b> Unión de Guadalupe</p>
-          <p><b>Población total:</b> 153 personas</p>
-          <p><b>Total de familias:</b> 31</p>
-        </div>
-      `;
-
-      marker.bindPopup(popupContent).openPopup();
-      
-      marker.bindTooltip("Las Juntas (Unión de Guadalupe)", {
-        permanent: true,
-        direction: 'top',
-        className: 'etiqueta-comunidad',
-        offset: [0, -10]
-      });
-
-      setTimeout(function(){ map.invalidateSize(); }, 300);
-    }
-  </script>
 </body>
 </html>
