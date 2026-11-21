@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Censo 1930 - San Francisco de Asís</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Panel Lateral (Sidebar) */
+    #sidebar {
+      width: 400px;
+      background-color: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .header-sidebar {
+      background-color: #8b0000;
+      color: white;
+      padding: 15px;
+    }
+    .header-sidebar h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.25em;
+    }
+    .header-sidebar p {
+      margin: 0;
+      font-size: 0.82em;
+      opacity: 0.9;
+    }
+    .stats-container {
+      display: flex;
+      background-color: #700000;
+      padding: 10px 12px;
+      color: white;
+      text-align: center;
+    }
+    .stat-box {
+      flex: 1;
+      border-right: 1px solid rgba(255,255,255,0.15);
+    }
+    .stat-box:last-child {
+      border-right: none;
+    }
+    .stat-number {
+      font-size: 1.15em;
+      font-weight: bold;
+    }
+    .stat-label {
+      font-size: 0.7em;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .search-box {
+      padding: 10px 15px;
+      background-color: #e9ecef;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .search-box input, .search-box select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 0.88em;
+      background-color: white;
+    }
+    .list-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 15px;
+    }
+    .family-group {
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .family-head {
+      font-weight: bold;
+      font-size: 0.94em;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 6px;
+    }
+    .family-head.hombre { color: #1f618d; }
+    .family-head.mujer { color: #7d3c98; }
+
+    .person-meta {
+      font-size: 0.76em;
+      color: #666;
+      font-weight: normal;
+      margin-top: 2px;
+    }
+    .member-item {
+      font-size: 0.84em;
+      color: #333;
+      padding: 4px 0;
+      border-bottom: 1px dashed #f3f3f3;
+    }
+    .member-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Etiquetas históricas */
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.73em;
+      margin-right: 4px;
+      margin-top: 2px;
+    }
+    .badge-oficio {
+      background-color: #eef2f7;
+      color: #2c3e50;
+      border: 1px solid #d5dce4;
+    }
+    .badge-leer {
+      background-color: #e8f8f5;
+      color: #117864;
+      border: 1px solid #a3e4d7;
+    }
+    .badge-civil {
+      background-color: #fef9e7;
+      color: #7d6608;
+      border: 1px solid #f9e79f;
+    }
+
+    /* Mapa */
+    #mapa {
+      flex: 1;
+      height: 100%;
+    }
+
+    /* Popups y Tooltips */
+    .popup-censo {
+      max-width: 290px;
+      line-height: 1.4;
+    }
+    .popup-censo h3 {
+      margin: 0 0 6px 0;
+      color: #8b0000;
+    }
+    .etiqueta-comunidad {
+      background-color: #8b0000;
+      color: #ffffff;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Panel de navegación e información lateral -->
+  <div id="sidebar">
+    <div class="header-sidebar">
+      <h2>San Francisco de Asís</h2>
+      <p>Censo General de Población 1930 &bull; Avance: Pág. 1 de 15</p>
+    </div>
+    
+    <div class="stats-container">
+      <div class="stat-box">
+        <div class="stat-number" id="statHabitantes">50</div>
+        <div class="stat-label">Habitantes</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="statFamilias">12</div>
+        <div class="stat-label">Familias</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">36%</div>
+        <div class="stat-label">Alfabetismo</div>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="inputBuscador" placeholder="Buscar por nombre, apellido, año o familia..." onkeyup="filtrarHabitantes()">
+      <select id="filtroOficio" onchange="filtrarHabitantes()">
+        <option value="">Todas las actividades / oficios</option>
+        <option value="Agricultor">Agricultor</option>
+        <option value="Carbonero">Carbonero</option>
+        <option value="Carpintero">Carpintero</option>
+        <option value="Jornalero de campo">Jornalero de campo</option>
+        <option value="Queaceres domesticos">Quehaceres domésticos</option>
+        <option value="Escolar">Escolar</option>
+      </select>
+    </div>
+
+    <div class="list-container" id="listaCenso">
+      <!-- Se genera dinámicamente con JS -->
+    </div>
+
+    <!-- Pie de página con aviso de derechos de autor -->
+    <div style="padding: 9px; font-size: 0.73em; text-align: center; color: #666; border-top: 1px solid #ddd; background: #fff;">
+      © 2026 Sergio Vidal — Proyecto de Investigación Censo 1930.<br>
+      Comunidad San Francisco de Asís (Pág. 1/15). Todos los derechos reservados.<br>
+      <i>Prohibida su copia o redistribución sin autorización explícita.</i>
+    </div>
+  </div>
+
+  <!-- Contenedor del Mapa -->
+  <div id="mapa"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // Coordenadas específicas para San Francisco de Asís (20° 35′ 52″ N, 102° 33′ 50″ O)
+    var coordsSanFrancisco = [20.59764, -102.56379];
+
+    // Inicializar mapa centrado en San Francisco de Asís
+    var map = L.map('mapa').setView(coordsSanFrancisco, 15);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Censo 1930',
+      maxZoom: 18
+    }).addTo(map);
+
+    // Padrón Página 1 - San Francisco de Asís (12 familias, 50 habitantes)
+    var familiasSanFrancisco = [
+      {
+        pagina: 1,
+        jefe: { nombre: "Sabino Flores", sexo: "Hombre", edad: "30 años", anio: 1900, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Carpintero", alfabetismo: "Solo sabe leer" },
+        integrantes: [
+          { nombre: "Crus Diaz De Flores", sexo: "Mujer", edad: "20 años", anio: 1910, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Guadalupe Arámbula", sexo: "Hombre", edad: "32 años", anio: 1898, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Jornalero de campo", alfabetismo: "Sabe leer y escribir" },
+        integrantes: [
+          { nombre: "Angela Mendéz De Arámbula", sexo: "Mujer", edad: "26 años", anio: 1904, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" },
+          { nombre: "Enrique Arámbula Méndez", sexo: "Hombre", edad: "9 años", anio: 1921, estadoCivil: "", actividad: "Escolar", alfabetismo: "" },
+          { nombre: "Juan Arámbula Méndez", sexo: "Hombre", edad: "6 años", anio: 1924, estadoCivil: "", actividad: "Escolar", alfabetismo: "" },
+          { nombre: "David Arambula Méndez", sexo: "Hombre", edad: "4 años", anio: 1926, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "Cristina Arámbula Méndez", sexo: "Mujer", edad: "Menor de 1 año", anio: 1930, estadoCivil: "", actividad: "", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "José María Camacho", sexo: "Hombre", edad: "56 años", anio: 1874, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Jornalero de campo", alfabetismo: "Solo sabe leer" },
+        integrantes: [
+          { nombre: "Felicitas Barba De Camacho", sexo: "Mujer", edad: "56 años", anio: 1874, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Lucas Hernández", sexo: "Hombre", edad: "39 años", anio: 1891, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Carbonero", alfabetismo: "" },
+        integrantes: [
+          { nombre: "MA Cruz De Hernández", sexo: "Mujer", edad: "29 años", anio: 1901, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" },
+          { nombre: "Margarita Hernández Cruz", sexo: "Mujer", edad: "14 años", anio: 1916, estadoCivil: "Soltero", actividad: "Queaceres domesticos", alfabetismo: "" },
+          { nombre: "José Hernández De Cruz", sexo: "Hombre", edad: "12 años", anio: 1918, estadoCivil: "Soltero", actividad: "Carbonero", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Santiago Cruz", sexo: "Hombre", edad: "55 años", anio: 1875, estadoCivil: "Viudo", actividad: "Jornalero de campo", alfabetismo: "" },
+        integrantes: [
+          { nombre: "Juana Cruz", sexo: "Mujer", edad: "16 años", anio: 1914, estadoCivil: "Soltero", actividad: "Queaceres domesticos", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Gregorio Hernández", sexo: "Hombre", edad: "24 años", anio: 1906, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Carbonero", alfabetismo: "" },
+        integrantes: [
+          { nombre: "Candelaria Hernández De Hernández", sexo: "Mujer", edad: "23 años", anio: 1907, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" },
+          { nombre: "Pablo Hernández Hernández", sexo: "Hombre", edad: "2 años", anio: 1928, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "Teodoro Hernández Hernández", sexo: "Hombre", edad: "Menor de 1 año", anio: 1930, estadoCivil: "", actividad: "", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Sibriano Hernández", sexo: "Hombre", edad: "36 años", anio: 1894, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Carbonero", alfabetismo: "" },
+        integrantes: [
+          { nombre: "Cesilia Hernández De Hernández", sexo: "Mujer", edad: "30 años", anio: 1900, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Margarito González", sexo: "Hombre", edad: "47 años", anio: 1883, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Jornalero de campo", alfabetismo: "Sabe leer y escribir" },
+        integrantes: [
+          { nombre: "Emilia Gutierrez De González", sexo: "Mujer", edad: "36 años", anio: 1894, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" },
+          { nombre: "Cristina González Gutierrez", sexo: "Mujer", edad: "18 años", anio: 1912, estadoCivil: "Soltero", actividad: "Queaceres domesticos", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Refugio Gonsález Gutierrez", sexo: "Hombre", edad: "17 años", anio: 1913, estadoCivil: "Soltero", actividad: "Jornalero de campo", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Soledad González Gutierrez", sexo: "Mujer", edad: "15 años", anio: 1915, estadoCivil: "Soltero", actividad: "Escolar", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Guadalupe González Gutierrez", sexo: "Mujer", edad: "12 años", anio: 1918, estadoCivil: "Soltero", actividad: "Escolar", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Jesús González Gutierrez", sexo: "Hombre", edad: "9 años", anio: 1921, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "Consepción González Gutierrez", sexo: "Mujer", edad: "5 años", anio: 1925, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "Paz González Gutierrez", sexo: "Mujer", edad: "2 años", anio: 1928, estadoCivil: "", actividad: "", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "José Martinez", sexo: "Hombre", edad: "37 años", anio: 1893, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Carpintero", alfabetismo: "Sabe leer y escribir" },
+        integrantes: [
+          { nombre: "Tomasa Lara De Martinez", sexo: "Mujer", edad: "29 años", anio: 1901, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "" },
+          { nombre: "Arnulfo Martinez Lara", sexo: "Hombre", edad: "13 años", anio: 1917, estadoCivil: "Soltero", actividad: "Escolar", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Francisca Martinez Lara", sexo: "Mujer", edad: "10 años", anio: 1920, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "María Martinez Lara", sexo: "Mujer", edad: "6 años", anio: 1924, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "Juana Martinez Lara", sexo: "Mujer", edad: "3 años", anio: 1927, estadoCivil: "", actividad: "", alfabetismo: "" },
+          { nombre: "Salomé Martinez Lara", sexo: "Mujer", edad: "Menor de 1 año", anio: 1930, estadoCivil: "", actividad: "", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Guadalupe De La Cerda", sexo: "Hombre", edad: "64 años", anio: 1866, estadoCivil: "Soltero", actividad: "Jornalero de campo", alfabetismo: "" },
+        integrantes: [
+          { nombre: "Valentina De La Cerda", sexo: "Mujer", edad: "62 años", anio: 1868, estadoCivil: "Soltero", actividad: "Queaceres domesticos", alfabetismo: "" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Modesto Hernández", sexo: "Hombre", edad: "50 años", anio: 1880, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Agricultor", alfabetismo: "Sabe leer y escribir" },
+        integrantes: [
+          { nombre: "Anita Martinez De Hernández", sexo: "Mujer", edad: "50 años", anio: 1880, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Daniel Hernández Martinez", sexo: "Hombre", edad: "19 años", anio: 1911, estadoCivil: "Soltero", actividad: "Agricultor", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "José Hernández Martinez", sexo: "Hombre", edad: "16 años", anio: 1914, estadoCivil: "Soltero", actividad: "Agricultor", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Guadalupe Hernández Martinez", sexo: "Mujer", edad: "13 años", anio: 1917, estadoCivil: "Soltero", actividad: "Escolar", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Francisca Hernández Martinez", sexo: "Mujer", edad: "11 años", anio: 1919, estadoCivil: "", actividad: "Escolar", alfabetismo: "Sabe leer y escribir" }
+        ]
+      },
+      {
+        pagina: 1,
+        jefe: { nombre: "Salome Vázquez", sexo: "Hombre", edad: "51 años", anio: 1879, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Agricultor", alfabetismo: "Sabe leer y escribir" },
+        integrantes: [
+          { nombre: "Selerina Diaz De Vázques", sexo: "Mujer", edad: "25 años", anio: 1905, estadoCivil: "Casado por lo Civil y la Iglesia", actividad: "Queaceres domesticos", alfabetismo: "Sabe leer y escribir" },
+          { nombre: "Lazaro Vázquez Díaz", sexo: "Hombre", edad: "16 años", anio: 1914, estadoCivil: "Soltero", actividad: "Agricultor", alfabetismo: "" },
+          { nombre: "Nicolaza Vazques Díaz", sexo: "Mujer", edad: "4 años", anio: 1926, estadoCivil: "", actividad: "", alfabetismo: "" }
+        ]
+      }
+    ];
+
+    // Generar etiquetas visuales para cada persona
+    function construirEtiquetas(persona) {
+      var html = '';
+      if (persona.actividad) {
+        html += `<span class="badge badge-oficio">🛠️ ${persona.actividad}</span>`;
+      }
+      if (persona.alfabetismo) {
+        html += `<span class="badge badge-leer">📖 ${persona.alfabetismo}</span>`;
+      }
+      if (persona.estadoCivil) {
+        html += `<span class="badge badge-civil">${persona.estadoCivil}</span>`;
+      }
+      return html ? `<div>${html}</div>` : '';
+    }
+
+    // Renderizar la lista lateral de familias
+    function renderizarLista(familias) {
+      var contenedor = document.getElementById('listaCenso');
+      contenedor.innerHTML = '';
+
+      if (familias.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center; color:#777; font-size:0.9em; margin-top:20px;">No se encontraron coincidencias con ese criterio.</p>';
+        return;
+      }
+
+      familias.forEach(function(fam) {
+        var esHombre = fam.jefe.sexo === "Hombre";
+        var icono = esHombre ? "👨" : "👩";
+        var claseHead = esHombre ? "hombre" : "mujer";
+
+        var htmlFam = `
+          <div class="family-group">
+            <div class="family-head ${claseHead}">
+              ${icono} ${fam.jefe.nombre} 
+              <div class="person-meta">${fam.jefe.edad} (Nac. ${fam.jefe.anio}) &bull; Pág. ${fam.pagina}</div>
+              ${construirEtiquetas(fam.jefe)}
+            </div>
+        `;
+
+        fam.integrantes.forEach(function(m) {
+          htmlFam += `
+            <div class="member-item">
+              <strong>&bull; ${m.nombre}</strong> <span style="color:#666;">(${m.edad}, Nac. ${m.anio})</span>
+              ${construirEtiquetas(m)}
+            </div>
+          `;
+        });
+
+        htmlFam += `</div>`;
+        contenedor.innerHTML += htmlFam;
+      });
+    }
+
+    // Filtrar habitantes por texto y por oficio
+    function filtrarHabitantes() {
+      var texto = document.getElementById('inputBuscador').value.toLowerCase();
+      var oficio = document.getElementById('filtroOficio').value;
+
+      var familiasFiltradas = familiasSanFrancisco.filter(function(fam) {
+        var personas = [fam.jefe].concat(fam.integrantes);
+
+        var coincideTexto = !texto || personas.some(function(p) {
+          return p.nombre.toLowerCase().includes(texto) ||
+                 String(p.anio).includes(texto) ||
+                 p.actividad.toLowerCase().includes(texto) ||
+                 p.estadoCivil.toLowerCase().includes(texto);
+        });
+
+        var coincideOficio = !oficio || personas.some(function(p) {
+          return p.actividad === oficio;
+        });
+
+        return coincideTexto && coincideOficio;
+      });
+
+      renderizarLista(familiasFiltradas);
+    }
+
+    // Renderizado inicial
+    renderizarLista(familiasSanFrancisco);
+
+    // Agregar marcador en el mapa para San Francisco de Asís
+    var marker = L.marker(coordsSanFrancisco).addTo(map);
+    
+    var popupContent = `
+      <div class="popup-censo">
+        <h3>San Francisco de Asís</h3>
+        <p><b>Censo 1930:</b> Página 1 de 15 (en captura)</p>
+        <p><b>Población registrada:</b> 50 habitantes (12 familias)</p>
+        <p><b>Oficios principales:</b> Jornaleros (6), Agricultores (5), Carboneros (4), Carpinteros (2).</p>
+        <hr>
+        <small>Usa el panel lateral para buscar apellidos, oficios o consultar el año de nacimiento de cada habitante.</small>
+      </div>
+    `;
+
+    marker.bindPopup(popupContent).openPopup();
+    
+    marker.bindTooltip("San Francisco de Asís", {
+      permanent: true,
+      direction: 'top',
+      className: 'etiqueta-comunidad',
+      offset: [0, -10]
+    });
+  </script>
+
+</body>
+</html>
